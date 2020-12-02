@@ -1,0 +1,27 @@
+{
+  "name": "dev-env",
+  "version": "1.0.0",
+  "description": "develop env, watch files change, mock data",
+  "main": "index.js",
+  "scripts": {
+    "serve": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "develop",
+    "env",
+    "mock"
+  ],
+  "author": "Eric",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "chokidar": "^3.4.3",
+    "connect": "^3.7.0",
+    "event-stream": "^4.0.1",
+    "http-proxy": "^1.18.1",
+    "parseurl": "^1.3.3",
+    "send": "^0.17.1",
+    "ws": "^7.4.0"
+  }
+}

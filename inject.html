@@ -1,0 +1,16 @@
+<!-- Code injected by live-server -->
+<script type="text/javascript">
+	if ('WebSocket' in window) {
+		(function() {
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function({ data }) {
+        if (data.indexOf('sign') < 0) return
+        let parseData = JSON.stringify(data)
+				if (parseData.sign == 'reload') window.location.reload();
+			};
+			console.log('Live reload enabled.');
+		})();
+	}
+</script>
