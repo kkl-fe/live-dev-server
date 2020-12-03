@@ -1,5 +1,5 @@
 {
-  "name": "dev-env",
+  "name": "e-devenv",
   "version": "1.0.0",
   "description": "develop env, watch files change, mock data",
   "main": "index.js",
