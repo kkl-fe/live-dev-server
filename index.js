@@ -17,10 +17,10 @@ const opts = {
   port: '3002',
   proxy: {},
   before: null,
-  server: {
-    root: path.join(__dirname, './src'),
-    wsInjectScript: './extra.inject.js',
-  },
+  workspace: './demo',
+  root:  path.join(__dirname, './'),
+  send: {},
+  wsInjectScript: './extra.inject.js',
 }
 
 const app = connect()
@@ -31,7 +31,7 @@ let customInjectScript = ''
 
 try {
   customInjectScript = fs.readFileSync(
-    path.join(process.cwd(), opts.server.wsInjectScript),
+    path.join(process.cwd(), opts.wsInjectScript),
     { encoding: 'utf-8' }
   )
 } catch (error) {
@@ -65,7 +65,9 @@ app.use(function (req, res, next) {
     reqPath = ''
   }
   
-  let sendOpts = opts.server
+  let sendOpts = Object.assign({
+    root: opts.root
+  }, opts.send)
   
   var handleInject = function () {}
   if (reqPath == '/' || reqPath.indexOf('.html') > -1) {
@@ -113,7 +115,7 @@ app.use(function (req, res, next) {
 var clients = []
 const server = http.createServer(app)
 
-const watcher = chokidar.watch('./src', {
+const watcher = chokidar.watch(opts.workspace, {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
   persistent: true,
 })

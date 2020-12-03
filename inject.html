@@ -5,15 +5,19 @@
       var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://'
       var address =
         protocol + window.location.host + window.location.pathname + '/ws'
-			var socket = new WebSocket(address)
+      var socket = new WebSocket(address)
       socket.onmessage = function ({ data: msgData }) {
-				console.log('-------------------', msgData)
+        console.log(
+          `%chot-reload%c${msgData}`,
+          'padding: 0 2px;color: white;background:#03a9f4',
+          'color: green;padding: 0 2px;'
+        )
         if (msgData.indexOf('sign') < 0) return
         let data = JSON.parse(msgData)
         if (data.sign == 'reload') {
           window.location.reload()
-				}
-				//////
+        }
+        //////
       }
     })()
   }
