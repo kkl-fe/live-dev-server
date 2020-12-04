@@ -1,6 +1,6 @@
 {
-  "name": "e-devenv",
-  "version": "1.0.0",
+  "name": "live-dev-server",
+  "version": "0.1.0",
   "description": "develop env, watch files change, mock data",
   "main": "index.js",
   "scripts": {
