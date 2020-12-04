@@ -11,6 +11,9 @@ const es = require('event-stream')
 const WebSocket = require('ws')
 const { PassThrough, Stream, Readable } = require('stream')
 
+const projectRoot = process.cwd()
+const defaultWorkspace = path.join(projectRoot,`./src`)
+
 const opts = {
   host: '0.0.0.0',
   port: '3002',
@@ -25,11 +28,25 @@ const opts = {
     },
   },
   before: null,
-  workspace: './demo',
-  root: path.join(__dirname, './'),
+  workspace: defaultWorkspace,
+  root: projectRoot,
   send: {},
-  wsInjectScript: './extra.inject.js',
+  wsInjectScript: path.join(__dirname, './extra.inject.js'),
 }
+console.log(projectRoot)
+// 读取配置文件
+try {
+  let config = require(path.join(projectRoot,`./lds.config.js`))
+  let { workspace, ...restConfig } = config
+  let extra = {
+    workspace: workspace ? path.join(projectRoot, workspace) : defaultWorkspace
+  }
+  // TODO deep merge
+  Object.assign(opts, restConfig, extra)
+} catch (error) {
+  console.log('没有lds.config.js配置文件')  
+}
+
 const protocol = 'http'
 const { port, host, proxy } = opts
 const openHost = host === '0.0.0.0' ? 'localhost' : host
@@ -39,7 +56,7 @@ const onDirectory = createNotFoundDirectoryListener()
 
 const INJECT_TAG = '</body>'
 const CUSTOME_INJECT_POSITION = `//////`
-const INJECT_SCRIPT = fs.readFileSync('./inject.html', { encoding: 'utf-8' })
+const INJECT_SCRIPT = fs.readFileSync(path.join(__dirname, './inject.html'), { encoding: 'utf-8' })
 
 const server = http.createServer(app)
 const wsIns = new WebSocket.Server({ server })
@@ -56,7 +73,7 @@ let handleInject = function () {}
 // 读取自定义inject片段
 try {
   customInjectScript = fs.readFileSync(
-    path.join(process.cwd(), opts.wsInjectScript),
+    opts.wsInjectScript,
     { encoding: 'utf-8' }
   )
 } catch (error) {
@@ -69,6 +86,8 @@ app.use(function (req, res, next) {
   var originalUrl = parseUrl.original(req)
   var reqPath = parseUrl(req).pathname
   let proxyServer = null
+  
+  opts.before instanceof Function && opts.before.call(this, req, res, next)
 
   if (proxy) {
     // 处理代理
@@ -106,8 +125,9 @@ app.use(function (req, res, next) {
   if (reqPath === '/' && originalUrl.pathname.substr(-1) !== '/') {
     reqPath = ''
   }
-
-  let needInject = reqPath == '' || reqPath.indexOf('.html') > -1
+  
+  // 如果是/demo/src/的时候，会指向到demo/src/index.html，这种情况需要注入inject片段
+  let maybeNeedInject = reqPath == '' || reqPath.indexOf('.html') > -1 || originalUrl.pathname.substr(-1) === '/'
   let sendOpts = Object.assign(
     {
       root: opts.root,
@@ -115,9 +135,14 @@ app.use(function (req, res, next) {
     opts.send
   )
 
-  if (needInject) {
+  if (maybeNeedInject) {
     handleInject = function (stream) {
+      
       let len = INJECT_SCRIPT.length
+      // 判断是否是html, 决定是否注入
+      let ctstr = res.getHeader('content-type')
+      if (ctstr.indexOf('html') < 0) return
+
       if (customInjectScript.length) {
         len += customInjectScript.length
       }
@@ -151,7 +176,7 @@ app.use(function (req, res, next) {
   // add directory handler
   sendStream.on('directory', onDirectory)
   // pipe
-  needInject && sendStream.on('stream', handleInject)
+  maybeNeedInject && sendStream.on('stream', handleInject)
   sendStream.pipe(res)
 })
 
