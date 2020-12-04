@@ -1,15 +1,14 @@
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
-const { execSync } = require('child_process')
 const connect = require('connect')
 const chokidar = require('chokidar')
 const httpProxy = require('http-proxy')
-const WebSocket = require('faye-websocket')
 const parseUrl = require('parseurl')
 const bodyParser = require('body-parser')
 const send = require('send')
 const es = require('event-stream')
+const WebSocket = require('ws')
 const { PassThrough, Stream, Readable } = require('stream')
 
 const opts = {
@@ -18,7 +17,7 @@ const opts = {
   proxy: {},
   before: null,
   workspace: './demo',
-  root:  path.join(__dirname, './'),
+  root: path.join(__dirname, './'),
   send: {},
   wsInjectScript: './extra.inject.js',
 }
@@ -56,19 +55,21 @@ app.use(function (req, res, next) {
     return
   }
 
-  
   var originalUrl = parseUrl.original(req)
   var reqPath = parseUrl(req).pathname
-  
+
   // make sure redirect occurs at mount
   if (reqPath === '/' && originalUrl.pathname.substr(-1) !== '/') {
     reqPath = ''
   }
-  
-  let sendOpts = Object.assign({
-    root: opts.root
-  }, opts.send)
-  
+
+  let sendOpts = Object.assign(
+    {
+      root: opts.root,
+    },
+    opts.send
+  )
+
   var handleInject = function () {}
   if (reqPath == '/' || reqPath.indexOf('.html') > -1) {
     handleInject = function (stream) {
@@ -112,8 +113,24 @@ app.use(function (req, res, next) {
   sendStream.on('stream', handleInject).pipe(res)
 })
 
-var clients = []
 const server = http.createServer(app)
+const wsIns = new WebSocket.Server({ server })
+
+let clients = []
+
+wsIns.on('connection', function connection(ws) {
+  ws.on('message', function incoming(message) {
+    console.log('received: %s', message)
+  })
+
+  clients.push(ws)
+
+  ws.on('close', function (param) {
+    clients = clients.filter((itm) => {
+      return ws != itm
+    })
+  })
+})
 
 const watcher = chokidar.watch(opts.workspace, {
   ignored: /(^|[\/\\])\../, // ignore dotfiles
