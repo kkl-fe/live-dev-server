@@ -14,38 +14,85 @@ const { PassThrough, Stream, Readable } = require('stream')
 const opts = {
   host: '0.0.0.0',
   port: '3002',
-  proxy: {},
+  proxy: {
+    '/api': {
+      target: 'http://xhx.xstable.kaikela.cn',
+      ws: true,
+      changeOrigin: true,
+      pathRewrite: {
+        '^/api': '',
+      },
+    },
+  },
   before: null,
   workspace: './demo',
   root: path.join(__dirname, './'),
   send: {},
   wsInjectScript: './extra.inject.js',
 }
+const protocol = 'http'
+const { port, host, proxy } = opts
+const openHost = host === '0.0.0.0' ? 'localhost' : host
 
 const app = connect()
+const onDirectory = createNotFoundDirectoryListener()
 
-const { port, host } = opts
+const INJECT_TAG = '</body>'
+const CUSTOME_INJECT_POSITION = `//////`
 const INJECT_SCRIPT = fs.readFileSync('./inject.html', { encoding: 'utf-8' })
-let customInjectScript = ''
 
+const server = http.createServer(app)
+const wsIns = new WebSocket.Server({ server })
+const watcher = chokidar.watch(opts.workspace, {
+  ignored: /(^|[\/\\])\../, // ignore dotfiles
+  persistent: true,
+})
+
+let openURL = ''
+let clients = []
+let customInjectScript = ''
+let handleInject = function () {}
+
+// 读取自定义inject片段
 try {
   customInjectScript = fs.readFileSync(
     path.join(process.cwd(), opts.wsInjectScript),
     { encoding: 'utf-8' }
   )
 } catch (error) {
-  console.error(error)
   console.log('没有找到自定义的inject文件')
 }
 
-const INJECT_TAG = '</body>'
-const CUSTOME_INJECT_POSITION = `//////`
-
 app.use(bodyParser.urlencoded({ extended: false }))
 
-const onDirectory = createNotFoundDirectoryListener()
-
 app.use(function (req, res, next) {
+  var originalUrl = parseUrl.original(req)
+  var reqPath = parseUrl(req).pathname
+  let proxyServer = null
+
+  if (proxy) {
+    // 处理代理
+    for (const p in proxy) {
+      if (reqPath.slice(0, p.length) == p) {
+        proxyServer = httpProxy.createProxyServer({})
+
+        let proxyItemOpts = JSON.parse(JSON.stringify(proxy[p]))
+        let { target, pathRewrite } = proxyItemOpts
+
+        // 处理pathRewrite
+        let resultReqPath = reqPath
+        for (let pr in pathRewrite) {
+          resultReqPath = resultReqPath.replace(new RegExp(pr), pathRewrite[pr])
+        }
+        delete proxyItemOpts.pathRewrite
+
+        req.url = resultReqPath + originalUrl.search
+        target && proxyServer.web(req, res, proxyItemOpts)
+        return
+      }
+    }
+  }
+
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     // method not allowed
     res.statusCode = 405
@@ -55,14 +102,12 @@ app.use(function (req, res, next) {
     return
   }
 
-  var originalUrl = parseUrl.original(req)
-  var reqPath = parseUrl(req).pathname
-
   // make sure redirect occurs at mount
   if (reqPath === '/' && originalUrl.pathname.substr(-1) !== '/') {
     reqPath = ''
   }
 
+  let needInject = reqPath == '' || reqPath.indexOf('.html') > -1
   let sendOpts = Object.assign(
     {
       root: opts.root,
@@ -70,20 +115,18 @@ app.use(function (req, res, next) {
     opts.send
   )
 
-  var handleInject = function () {}
-  if (reqPath == '/' || reqPath.indexOf('.html') > -1) {
+  if (needInject) {
     handleInject = function (stream) {
-      var len = INJECT_SCRIPT.length
+      let len = INJECT_SCRIPT.length
       if (customInjectScript.length) {
         len += customInjectScript.length
       }
       len += res.getHeader('Content-Length')
-
       res.setHeader('Content-Length', len)
 
-      var originalPipe = stream.pipe
-
+      let originalPipe = stream.pipe
       stream.pipe = function (resq) {
+        // TODO 此处优化掉es模块
         let tmpStream = originalPipe.call(
           stream,
           es.replace(new RegExp(INJECT_TAG, 'i'), INJECT_SCRIPT + INJECT_TAG)
@@ -104,19 +147,13 @@ app.use(function (req, res, next) {
   }
 
   // create send stream
-  const sendStream = send(req, reqPath, sendOpts)
-
+  let sendStream = send(req, reqPath, sendOpts)
   // add directory handler
   sendStream.on('directory', onDirectory)
-
   // pipe
-  sendStream.on('stream', handleInject).pipe(res)
+  needInject && sendStream.on('stream', handleInject)
+  sendStream.pipe(res)
 })
-
-const server = http.createServer(app)
-const wsIns = new WebSocket.Server({ server })
-
-let clients = []
 
 wsIns.on('connection', function connection(ws) {
   ws.on('message', function incoming(message) {
@@ -132,10 +169,6 @@ wsIns.on('connection', function connection(ws) {
   })
 })
 
-const watcher = chokidar.watch(opts.workspace, {
-  ignored: /(^|[\/\\])\../, // ignore dotfiles
-  persistent: true,
-})
 watcher.on('change', (path) => {
   clients.forEach((ws) => {
     ws.send(generateWatchMessage('reload', path))
@@ -143,27 +176,11 @@ watcher.on('change', (path) => {
 })
 
 server.addListener('listening', function () {
-  const protocol = 'http'
   const address = server.address()
-  var openHost = host === '0.0.0.0' ? 'localhost' : host
-  let serveHost = address.address === '0.0.0.0' ? '127.0.0.1' : address.address
-  var openURL = protocol + '://' + openHost + ':' + address.port
+  // let serveHost = address.address === '0.0.0.0' ? '127.0.0.1' : address.address
+  openURL = protocol + '://' + openHost + ':' + address.port
 
   console.log(openURL)
-})
-
-server.addListener('upgrade', function (request, socket, head) {
-  let ws = new WebSocket(request, socket, head)
-  ws.onopen = () => ws.send('connected')
-
-  clients.push(ws)
-
-  ws.onclose = () => {
-    // refresh page, remove match ws
-    clients = clients.filter((itm) => {
-      return ws != itm
-    })
-  }
 })
 
 server.listen(port)
@@ -192,5 +209,5 @@ function generateMessage(sign, data) {
  * @param {String} path file path
  */
 function generateWatchMessage(sign, path) {
-  return generateMessage(sign, { path })
+  return generateMessage(sign, { path, host: openURL })
 }

@@ -4,6 +4,3 @@ let data = JSON.parse(msgData);
 if (data.sign == 'reload') {
   window.location.reload();
 }
-if (data.sign == 'example') {
-  console.log('---- -----');
-}
