@@ -12,11 +12,6 @@
           'padding: 0 2px;color: white;background:#03a9f4',
           'color: green;padding: 0 2px;'
         )
-        if (msgData.indexOf('sign') < 0) return
-        let data = JSON.parse(msgData)
-        if (data.sign == 'reload') {
-          window.location.reload()
-        }
         //////
       }
     })()
