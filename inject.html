@@ -6,9 +6,9 @@
       var address =
         protocol + window.location.host + window.location.pathname + '/ws'
       var socket = new WebSocket(address)
-      socket.onmessage = function ({ data: msgData }) {
+      socket.onmessage = function (event) {
         console.log(
-          `%chot-reload%c${msgData}`,
+          `%chot-reload%c${event}`,
           'padding: 0 2px;color: white;background:#03a9f4',
           'color: green;padding: 0 2px;'
         )

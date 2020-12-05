@@ -11,6 +11,27 @@ const es = require('event-stream')
 const WebSocket = require('ws')
 const { PassThrough, Stream, Readable } = require('stream')
 
+const colors={
+  reset: "\x1b[0m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m"
+};
+const Log = {
+  error: function(...parm) {
+    console.log(`${colors.red}[Error]`, ...parm, colors.reset);
+  },
+  log: function(...parm) {
+    console.log(`[Log]`, ...parm);
+  },
+  warn: function(...parm) {
+    console.log(`${colors.yellow}[Warning]`, ...parm, colors.reset);
+  },
+  info: function(...parm) {
+    console.log(`${colors.green}[Info]`, ...parm, colors.reset);
+  },
+}
+
 const projectRoot = process.cwd()
 const defaultWorkspace = path.join(projectRoot, `./src`)
 
@@ -27,13 +48,21 @@ const opts = {
       },
     },
   },
-  before: null,
+  before: function () {},
   workspace: defaultWorkspace,
   root: projectRoot,
   send: {},
-  wsInjectScript: path.join(__dirname, './extra.inject.js'),
+  inject: function (event) {
+    // 自定义处理socket onmessage方法
+    let edata = event.data
+    if (edata.indexOf('sign') < 0) return
+    let data = JSON.parse(edata)
+    if (data.sign == 'reload') {
+      window.location.reload()
+    }
+  },
 }
-console.log(projectRoot)
+
 // 读取配置文件
 try {
   let config = require(path.join(projectRoot, `./lds.config.js`))
@@ -44,7 +73,7 @@ try {
   // TODO deep merge
   Object.assign(opts, restConfig, extra)
 } catch (error) {
-  console.log('没有lds.config.js配置文件')
+  Log.info('没有lds.config.js配置文件')
 }
 
 const protocol = 'http'
@@ -72,18 +101,17 @@ let clients = []
 let customInjectScript = ''
 let handleInject = function () {}
 
-// 读取自定义inject片段
-try {
-  customInjectScript = fs.readFileSync(opts.wsInjectScript, {
-    encoding: 'utf-8',
-  })
-} catch (error) {
-  console.log('没有找到自定义的inject文件')
-}
-
 app.use(bodyParser.urlencoded({ extended: false }))
 
-opts.before instanceof Function && opts.before(app)
+// 处理自定义inject片段
+assertFunc(opts, 'inject', function () {
+  customInjectScript = `;(${opts.inject.toString()})(event);`
+})
+
+// 处理before钩子
+assertFunc(opts, 'before', function () {
+  opts.before(app)
+})
 
 app.use(function (req, res, next) {
   var originalUrl = parseUrl.original(req)
@@ -117,14 +145,14 @@ app.use(function (req, res, next) {
 
   if (maybeNeedInject) {
     handleInject = function (stream) {
-      let len = INJECT_SCRIPT.length
       // 判断是否是html, 决定是否注入
       let ctstr = res.getHeader('content-type')
       if (ctstr.indexOf('html') < 0) return
 
-      if (customInjectScript.length) {
-        len += customInjectScript.length
-      }
+      let len = Buffer.byteLength(INJECT_SCRIPT)
+      let cisLen = Buffer.byteLength(customInjectScript)
+      if (cisLen) len += cisLen
+
       len += res.getHeader('Content-Length')
       res.setHeader('Content-Length', len)
 
@@ -189,7 +217,7 @@ if (proxy) {
 
 wsIns.on('connection', function connection(ws) {
   ws.on('message', function incoming(message) {
-    console.log('received: %s', message)
+    Log.log('received: %s', message)
   })
 
   clients.push(ws)
@@ -212,7 +240,7 @@ server.addListener('listening', function () {
   // let serveHost = address.address === '0.0.0.0' ? '127.0.0.1' : address.address
   openURL = protocol + '://' + openHost + ':' + address.port
 
-  console.log(openURL)
+  Log.info(openURL)
 })
 
 server.listen(port)
@@ -242,4 +270,19 @@ function generateMessage(sign, data) {
  */
 function generateWatchMessage(sign, path) {
   return generateMessage(sign, { path, host: openURL })
+}
+
+/**
+ * 
+ * @param {Object} option
+ * @param {*} propName 判断的属性名
+ * @param {*} fn 校验成功后执行的方法
+ * @param {*} isNotOption 是否是配置对象
+ */
+function assertFunc(option, propName, fn, isNotOption) {
+  if (option[propName] instanceof Function) {
+    fn instanceof Function && fn()
+  } else {
+    Log.warn(`${isNotOption ? '' : '[OPTION]'}${propName} must be a method`)
+  }
 }
