@@ -6,4 +6,4 @@ const path = require('path');
 
 process.title = 'live-dev-server';
 
-execa('node', [path.resolve(__dirname, '../index.js')]).stdout.pipe(process.stdout);
+execa('node', [path.resolve(__dirname, '../lib/index.js')]).stdout.pipe(process.stdout);
