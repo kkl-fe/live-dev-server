@@ -1,6 +1,6 @@
 {
   "name": "live-dev-server",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "develop env, watch files change, mock data",
   "main": "lib/index.js",
   "bin": {
