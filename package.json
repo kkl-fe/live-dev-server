@@ -1,13 +1,13 @@
 {
   "name": "live-dev-server",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "develop env, watch files change, mock data",
   "main": "lib/index.js",
   "bin": {
     "live-dev-server": "bin/cli.js"
   },
   "scripts": {
-    "serve": "node index.js",
+    "serve": "node lib/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
