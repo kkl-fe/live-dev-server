@@ -64,13 +64,11 @@ module.exports = {
 ```
 
 ## dependencies
-```bash
-  body-parser
-  chokidar
-  connect
-  execa
-  http-proxy
-  parseurl
-  send
-  ws
-```
+- [body-parser](https://github.com/expressjs/body-parser)
+- [chokidar](https://github.com/paulmillr/chokidar)
+- [connect](https://github.com/senchalabs/connect)
+- [execa](https://github.com/sindresorhus/execa)
+- [http-proxy](https://github.com/http-party/node-http-proxy)
+- [parseurl](https://github.com/pillarjs/parseurl)
+- [send](https://github.com/pillarjs/send)
+- [ws](https://github.com/websockets/ws)
