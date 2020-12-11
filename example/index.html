@@ -1,0 +1,36 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    hello world
+    <div id="app">测试proxy</div>
+    <div id="panel"></div>
+    <script>
+      const api1 = '/api/repos/kkl-fe/live-dev-server/actions/artifacts'
+      const followsApi = '/api/users/lceric/followers'
+      document.querySelector('#app').onclick = textProxy
+
+      function textProxy() {
+        axios
+          .get(followsApi, {
+            params: {
+              owner: 'kkl-fe',
+              repo: 'live-dev-server',
+              username: 'lceric'
+            },
+          })
+          .then((res) => {
+            document.querySelector('#panel').innerHTML = `<pre>${JSON.stringify(
+              res.data,
+              null,
+              2
+            )}</pre>`
+          })
+      }
+    </script>
+  </body>
+</html>
