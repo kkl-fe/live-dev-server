@@ -1,7 +1,7 @@
 {
   "name": "live-dev-server",
-  "version": "0.8.0",
-  "description": "develop env, watch files change, mock data",
+  "version": "0.8.1",
+  "description": "develop env, watch files change",
   "main": "lib/index.js",
   "bin": {
     "live-dev-server": "bin/cli.js"
