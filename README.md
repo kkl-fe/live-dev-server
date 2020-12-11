@@ -8,21 +8,21 @@
 ## Installation
 need node.js and npm.
 
-### 1. install
+**install**
 cd project dir
 
 ```bash
 npm install -D live-dev-server
 ```
 
-### 2. add scripts
+**add scripts**
 ```json
 "scripts": {
   "serve": "live-dev-server",
 },
 ```
 
-### 3. run server
+**run server**
 ```bash
 npm run serve
 ```
@@ -58,4 +58,16 @@ module.exports = {
     },
   },
 }
+```
+
+## dependencies
+```bash
+  body-parser
+  chokidar
+  connect
+  execa
+  http-proxy
+  parseurl
+  send
+  ws
 ```
