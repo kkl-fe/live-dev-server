@@ -1,4 +1,7 @@
 # live-dev-server
+[![view on npm](http://img.shields.io/npm/v/live-dev-server.svg)](https://www.npmjs.com/package/live-dev-server)
+[![npm module downloads per month](http://img.shields.io/npm/dm/live-dev-server.svg)](https://www.npmjs.org/package/live-dev-server)
+
 > a little development server width live reload.
 
 ## Live Dev Server
