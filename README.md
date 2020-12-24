@@ -2,7 +2,7 @@
 [![view on npm](http://img.shields.io/npm/v/live-dev-server.svg)](https://www.npmjs.com/package/live-dev-server)
 [![npm module downloads per month](http://img.shields.io/npm/dm/live-dev-server.svg)](https://www.npmjs.org/package/live-dev-server)
 
-> a little development server width live reload.
+> a little development server with live reload.
 
 ## Live Dev Server
 1. watch files change, and reload the page。You can also execute custom code。
