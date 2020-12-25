@@ -7,29 +7,35 @@
   </head>
   <body>
     hello world
-    <div id="app">测试proxy</div>
+    <button id="app">测试proxy</button>
     <div id="panel"></div>
     <script>
       const api1 = '/api/repos/kkl-fe/live-dev-server/actions/artifacts'
       const followsApi = '/api/users/lceric/followers'
+
+      let $panel = document.querySelector('#panel')
       document.querySelector('#app').onclick = textProxy
 
       function textProxy() {
+        write($panel, 'loading...')
         axios
           .get(followsApi, {
             params: {
               owner: 'kkl-fe',
               repo: 'live-dev-server',
-              username: 'lceric'
+              username: 'lceric',
             },
           })
           .then((res) => {
-            document.querySelector('#panel').innerHTML = `<pre>${JSON.stringify(
-              res.data,
-              null,
-              2
-            )}</pre>`
+            write($panel, `<pre>${JSON.stringify(res.data, null, 2)}</pre>`)
           })
+          .catch((err) => {
+            write($panel, 'Error')
+          })
+      }
+
+      function write(dom, text) {
+        dom.innerHTML = text
       }
     </script>
   </body>
