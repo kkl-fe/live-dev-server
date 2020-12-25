@@ -1,3 +1,4 @@
+example/*
 package-lock.json
 node_modules/*
-.vscode
+.vscode/*
