@@ -1,6 +1,6 @@
 {
   "name": "live-dev-server",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "develop env, watch files change",
   "main": "lib/index.js",
   "bin": {
