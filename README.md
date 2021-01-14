@@ -3,7 +3,7 @@
 [![view on npm](http://img.shields.io/npm/v/live-dev-server.svg)](https://www.npmjs.com/package/live-dev-server)
 [![npm module downloads per month](http://img.shields.io/npm/dm/live-dev-server.svg)](https://www.npmjs.org/package/live-dev-server)
 
-> a little development server with live reload.
+> a small development server with live reload.
 
 ## Live Dev Server
 
@@ -76,6 +76,10 @@ module.exports = {
         window.location.reload()
     }
   },
+  watcher: {
+    options: null,
+    on: ['add', 'addDir', 'change'],
+  },
   proxy: {
     '/api': {
       target: 'https://api.github.com',
@@ -89,6 +93,34 @@ module.exports = {
 }
 ```
 
+**watch more**
+
+> https://github.com/paulmillr/chokidar#api
+
+```js
+{
+  watcher: {
+    options: null, // chokidar options
+    on: ['add', 'addDir', 'change'], // chokidar on
+  },
+}
+```
+when config watcher,  In the `inject` code, you will receive `wacher-[name]`, and `isDir` can be used to determine whether it is a folder.
+
+```bash
+# change
+{"origin":"watcher-change","data":{"url":"http://localhost:3002/index.html","host":"http://localhost:3002","path":"index.html","ext":".html","isDir":false}}
+
+# add dir
+{"origin":"watcher-addDir","data":{"url":"http://localhost:3002/addDir","host":"http://localhost:3002","path":"addDir","ext":"","isDir":true}}
+
+# add file
+{"origin":"watcher-add","data":{"url":"http://localhost:3002/addDir/file.txt","host":"http://localhost:3002","path":"addDir/file.txt","ext":".txt","isDir":false}}
+
+# rename dir, will trigger add
+{"origin":"watcher-addDir","data":{"url":"http://localhost:3002/renameFold","host":"http://localhost:3002","path":"renameFold","ext":"","isDir":true}}
+{"origin":"watcher-add","data":{"url":"http://localhost:3002/renameFold/file.txt","host":"http://localhost:3002","path":"renameFold/file.txt","ext":".txt","isDir":false}}
+```
 
 ## dependencies
 
