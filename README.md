@@ -105,7 +105,7 @@ module.exports = {
   },
 }
 ```
-when config watcher,  In the `inject` code, you will receive `wacher-[name]`, and `isDir` can be used to determine whether it is a folder.
+when config watcher,  In the `inject` code, you will receive `watcher-[name]`, and `isDir` can be used to determine whether it is a folder.
 
 ```bash
 # change
