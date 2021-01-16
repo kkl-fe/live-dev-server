@@ -25,7 +25,7 @@ npm install live-dev-server
 options priority level:
 
 1. incoming option
-2. `lds.config.js`
+2. `lds.config.js` or `live.config.js`
 3. default option
 
 ```js
@@ -54,7 +54,7 @@ npm run serve
 
 ## configuration file
 
-project dir create a configuration file： `lds.config.js`.such as:
+project dir create a configuration file： `lds.config.js/live.config.js`.such as:
 
 ```js
 module.exports = {
