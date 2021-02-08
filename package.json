@@ -22,6 +22,7 @@
     "url": "https://github.com/kkl-fe/live-dev-server"
   },
   "dependencies": {
+    "body-parser": "^1.19.0",
     "chokidar": "^3.4.3",
     "connect": "^3.7.0",
     "http-proxy": "^1.18.1",
