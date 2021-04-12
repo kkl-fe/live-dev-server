@@ -1,6 +1,6 @@
 {
   "name": "live-dev-server",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "develop env, watch files change",
   "main": "lib/index.js",
   "bin": {
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "serve": "node bin/cli.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node bin/cli.js"
   },
   "keywords": [
     "develop",
